@@ -7,12 +7,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [mlops-churn-prediction-service, rag-document-intelligence]
 
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build ./${{ matrix.service }} --file Dockerfile --tag ${{ matrix.service }}:$(date +%s)
