@@ -16,4 +16,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build ./${{ matrix.service }} --file Dockerfile --tag ${{ matrix.service }}:$(date +%s)
+      run: docker build ./${{ matrix.service }} --file ./${{ matrix.service }}/Dockerfile --tag ${{ matrix.service }}:$(date +%s)
