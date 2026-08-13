@@ -1,13 +1,19 @@
+import os
 from fastapi import FastAPI, HTTPException
 from .schemas import Answer, DocumentInput, QuestionInput
 from .rag_engine import RAGEngine
+from .llm import grounded_answer
 
-app = FastAPI(title="RAG Document Intelligence API", version="1.0.0")
+app = FastAPI(title="RAG Document Intelligence API", version="1.1.0")
 engine = RAGEngine()
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "indexed_chunks": len(engine.chunks)}
+    return {
+        "status": "ok",
+        "indexed_chunks": len(engine.chunks),
+        "llm_enabled": bool(os.getenv("OPENAI_API_KEY")),
+    }
 
 @app.post("/documents")
 def ingest_document(document: DocumentInput):
@@ -17,6 +23,8 @@ def ingest_document(document: DocumentInput):
 @app.post("/ask", response_model=Answer)
 def ask_question(question: QuestionInput):
     try:
-        return engine.answer(question.question, question.top_k)
+        retrieval = engine.answer(question.question, question.top_k)
+        answer = grounded_answer(question.question, retrieval["sources"], retrieval["answer"])
+        return {**retrieval, "answer": answer}
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
